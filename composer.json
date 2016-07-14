@@ -1,0 +1,25 @@
+{
+    "name": "stavarengo/o-auth-connect",
+    "description": "The easiest way to connect to OAuth2 services using Zend Framework 2 (ZF2)",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Rafael Stavarengo",
+            "email": "faelsta@gmail.com",
+            "homepage": "http://facebook.com/rafael.stavarengo"
+        }
+    ],
+    "require": {
+        "php": "^5.3.3|~7.0",
+        "zendframework/zend-servicemanager": "^2.5.0 || ^2.7.5 || ^3.0.3"
+    },
+    "license": "BSD-3-Clause",
+    "autoload": {
+        "psr-4": {
+            "Sta\\OAuthConnect\\": "src/OAuthConnect/"
+        },
+        "classmap": [
+            "./Module.php"
+        ]
+    }
+}
