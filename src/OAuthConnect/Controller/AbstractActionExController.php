@@ -1,10 +1,9 @@
 <?php
 
-
 namespace Sta\OAuthConnect\Controller;
 
 
-use Sta\Mvc\Controller\Action;
+use Sta\OAuthConnect\Controller\Action\AbstractAction;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\Mvc\Exception;
 use Zend\Mvc\MvcEvent;
@@ -41,7 +40,7 @@ class AbstractActionExController extends AbstractActionController
             return parent::onDispatch($e);
         }
 
-        $actionResponse = Action::invoke($this);
+        $actionResponse = AbstractAction::invoke($this);
 
         $e->setResult($actionResponse);
 
@@ -50,7 +49,12 @@ class AbstractActionExController extends AbstractActionController
 
     public function indexAction()
     {
-        return Action::invoke($this);
+        return AbstractAction::invoke($this);
+    }
+
+    public function getServiceLocator()
+    {
+        return $this->serviceLocator;
     }
 
 }

@@ -7,7 +7,7 @@
 
 namespace Sta\OAuthConnect\Exception;
 
-class InvalidThirdPartyName extends \Exception
+class MissingOAuthServiceDependencies extends \Exception
 {
 
 }

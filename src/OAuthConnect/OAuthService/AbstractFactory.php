@@ -2,9 +2,9 @@
 
 namespace Sta\OAuthConnect\OAuthService;
 
-use App\ThirdPartyOAuth\Exception\InvalidThirdPartyName;
 use Interop\Container\ContainerInterface;
 use Interop\Container\Exception\ContainerException;
+use Sta\OAuthConnect\Exception\MissingOAuthServiceDependencies;
 use Zend\ServiceManager\AbstractFactoryInterface;
 use Zend\ServiceManager\Exception\ServiceNotCreatedException;
 use Zend\ServiceManager\Exception\ServiceNotFoundException;
@@ -79,7 +79,7 @@ class AbstractFactory implements AbstractFactoryInterface
         $serviceClassName = $requestedName;
 
         if (!class_exists($serviceClassName)) {
-            throw new InvalidThirdPartyName(
+            throw new \Sta\OAuthConnect\Exception\InvalidThirdPartyName(
                 'Invalid "thirdPartyName". We do not support the service "' . $serviceClassName . '".'
             );
         }
@@ -90,10 +90,18 @@ class AbstractFactory implements AbstractFactoryInterface
             $service = new $serviceClassName();
         }
 
-        if (!($service instanceof ThirdPartyOAuthInterface)) {
-            throw new InvalidThirdPartyName(
+        if (!($service instanceof OAuthServiceInterface)) {
+            throw new \Sta\OAuthConnect\Exception\InvalidThirdPartyName(
                 'The service "' . $serviceClassName .
-                '" does not implement the interface "' . ThirdPartyOAuthInterface::class . '".'
+                '" does not implement the interface "' . OAuthServiceInterface::class . '".'
+            );
+        }
+
+        $checkDependencies = $service->checkDependencies();
+        if ($checkDependencies !== true) {
+            throw new MissingOAuthServiceDependencies(
+                'Please, make sure you have all of this requeriments ok before you try to use the ' .
+                $serviceClassName . ' OAuth Service: ' . implode(', ', $checkDependencies)
             );
         }
 

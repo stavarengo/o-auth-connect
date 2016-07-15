@@ -37,7 +37,13 @@ abstract class AbstractAction
         }
 
         /** @var AbstractAction $action */
-        $action = new $actionFqcn($controller);
+        $action = null;
+        if ($controller->getServiceLocator()->has($actionFqcn)) {
+            $action = $controller->getServiceLocator()->get($actionFqcn);
+        } else {
+            $action = new $actionFqcn();
+        }
+        $action->setController($controller);
 
         return $action->execute();
     }
@@ -83,4 +89,17 @@ abstract class AbstractAction
     {
         return $this->getController()->getResponse();
     }
+
+    /**
+     * @param \Sta\OAuthConnect\Controller\AbstractActionExController $controller
+     *
+     * @return $this
+     */
+    public function setController($controller)
+    {
+        $this->controller = $controller;
+
+        return $this;
+    }
+
 }

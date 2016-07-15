@@ -1,0 +1,137 @@
+<?php
+$langValue = str_replace('_', '-', \Locale::getDefault());
+?>
+<!doctype html>
+<html lang="<?php echo $langValue ?>">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height, initial-scale=1, maximum-scale=1">
+        <style type="text/css">
+            html * {
+                outline: 0 !important;
+            }
+
+            * {
+                -webkit-box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                box-sizing: border-box;
+            }
+
+            body
+            {
+                font-family: Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
+                font-size: 14px;
+                line-height: 1.42857143;
+                color: #555459;
+                background-color: #fff;
+            }
+
+            .backdrop, .modal {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                display: block;
+                overflow: hidden;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .backdrop {
+                opacity: .5;
+                background-color: #000;
+            }
+
+            .dialog {
+                position: relative;
+                width: auto;
+                margin: 10px;
+            }
+
+            .content {
+                position: relative;
+                background-color: #fff;
+                border: 1px solid #999;
+                border: 1px solid rgba(0, 0, 0, .2);
+                border-radius: 6px;
+                -webkit-box-shadow: 0 3px 9px rgba(0, 0, 0, .5);
+                box-shadow: 0 3px 9px rgba(0, 0, 0, .5);
+                background-clip: padding-box;
+            }
+
+            .body {
+                position: relative;
+                padding: 15px;
+            }
+
+            .footer {
+                padding: 15px;
+                text-align: right;
+                border-top: 1px solid #e5e5e5;
+            }
+
+            button {
+                color: #fff;
+                background-color: #337ab7;
+                display: inline-block;
+                margin: 0;
+                font-weight: 400;
+                text-align: center;
+                vertical-align: middle;
+                touch-action: manipulation;
+                cursor: pointer;
+                border: 1px solid #2e6da4;
+                white-space: nowrap;
+                padding: 6px 12px;
+                font-size: 14px;
+                line-height: 1.42857143;
+                border-radius: 4px;
+                -webkit-user-select: none;
+                user-select: none;
+                -webkit-appearance: button;
+                cursor: pointer;
+                text-transform: none;
+                overflow: visible;
+            }
+            .hide
+            {
+                display: none;
+            }
+        </style>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    </head>
+    <body>
+        <div id="wait">
+            <strong><?php echo $this->translate('Redirecting...', 'Sta\OAuthConnect') ?></strong>
+        </div>
+        <div id="modal-wp" class="hide">
+            <div class="backdrop"></div>
+            <div class="modal" >
+                <div class="dialog">
+                    <div class="content">
+                        <div class="body">
+                            <strong><?php echo $this->translate('You can now close this window.', 'Sta\OAuthConnect') ?></strong>
+                        </div>
+                        <div class="footer">
+                            <button onclick="window.close()"><?php echo $this->translate('Close this window', 'Sta\OAuthConnect') ?></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var showModal = function() {
+                document.getElementById('wait').className = 'hide';
+                document.getElementById('modal-wp').className = '';
+            };
+            if (window.opener && window.opener.fc && typeof(window.opener.fc.closeMe) == 'function') {
+                setTimeout(showModal, 1000);
+                window.opener.fc.closeMe(window);
+            } else {
+                showModal();
+            }
+        </script>
+    </body>
+</html>
+

@@ -5,9 +5,9 @@
  * @link      ${GITHUB_URL} Source code
  */
 
-namespace Sta\OAuthConnect\OAuthService;
+namespace Sta\OAuthConnect\Exception;
 
-interface ThirdPartyOAuthInterface
+class MissingConfiguration extends \Exception
 {
-
+    
 }
