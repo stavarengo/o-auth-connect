@@ -13,9 +13,7 @@
     ],
     "require": {
         "php": "^5.3.3|~7.0",
-        "stavarengo/sta-commons": "dev-master",
-        "zendframework/zend-mvc": "^2.5.0 || ^2.7.5 || ^3.0.3",
-        "zendframework/zend-uri": "^2.5.0 || ^2.7.5 || ^3.0.3"
+        "stavarengo/sta-commons": "dev-master"
     },
     "license": "BSD-3-Clause",
     "autoload": {
