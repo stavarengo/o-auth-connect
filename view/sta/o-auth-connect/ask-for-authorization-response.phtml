@@ -112,7 +112,7 @@ $langValue = str_replace('_', '-', \Locale::getDefault());
                         <div class="body">
                             <strong><?php echo $this->translate('You can now close this window.', 'Sta\OAuthConnect') ?></strong>
                         </div>
-                        <div class="footer">
+                        <div id="modal-footer">
                             <button onclick="window.close()"><?php echo $this->translate('Close this window', 'Sta\OAuthConnect') ?></button>
                         </div>
                     </div>
@@ -124,10 +124,22 @@ $langValue = str_replace('_', '-', \Locale::getDefault());
             var showModal = function() {
                 document.getElementById('wait').className = 'hide';
                 document.getElementById('modal-wp').className = '';
+                // Scrips can only close windows that they have opened.
+                document.getElementById('modal-footer').className = 'footer' + (window.opener ? '' : ' hide');
             };
-            if (window.opener && window.opener.fc && typeof(window.opener.fc.closeMe) == 'function') {
+            if (window.opener) {
+                if (typeof(window.opener._staOAuthConnectCloseMe) == 'function') {
+                    // If there is an opener with an function that can close this window it's safer to ask the that opener
+                    // to close this window to avoid secure issues.
+                    window.opener._staOAuthConnectCloseMe(window);
+                } else {
+                    // The opener does not has a custom function to close this window, but we can still try to close
+                    // it by our self. This probably will not work in all browsers.
+                    window.close();
+                }
+                // But even with the opener, things can go wrong, so if the window is still open after 1 second we ask
+                // the to close this window, a modal shows up notifying the user to close the window manually.
                 setTimeout(showModal, 1000);
-                window.opener.fc.closeMe(window);
             } else {
                 showModal();
             }

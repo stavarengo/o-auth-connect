@@ -11,8 +11,11 @@ use Sta\Commons\CryptQueryParam;
 use Sta\Commons\InternalRoute;
 use Sta\OAuthConnect\Controller\AbstractActionExController;
 use Sta\OAuthConnect\Controller\Action\AbstractAction;
+use Sta\OAuthConnect\OAuthConnectEvent;
 use Sta\OAuthConnect\OAuthService\Facebook;
 use Sta\OAuthConnect\OAuthService\OAuthServiceInterface;
+use Zend\EventManager\EventManagerInterface;
+use Zend\Http\PhpEnvironment\Response;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\View\Model\ViewModel;
 
@@ -39,6 +42,21 @@ class AskForAuthorizationResponse extends AbstractAction
     const QUERY_PARAM_REQUESTED_SCOPES = 'requestedScopes';
     const OPT_ASYNC_AUTHORIZATION = 'sta-async';
     const SESSION_PARAM_CONTINUE_AFTER_LOGIN = self::class . '::SESSION_PARAM_CONTINUE_AFTER_LOGIN';
+
+    /**
+     * @var EventManagerInterface
+     */
+    protected $events;
+
+    /**
+     * AskForAuthorizationResponse constructor.
+     *
+     * @param \Zend\EventManager\EventManagerInterface $events
+     */
+    public function __construct(\Zend\EventManager\EventManagerInterface $events)
+    {
+        $this->events = $events;
+    }
 
     /**
      * @param $continueAfterResponse
@@ -72,7 +90,7 @@ class AskForAuthorizationResponse extends AbstractAction
         }
 
         if (!$oAuthService) {
-            die('implementar o que acontece aqui');
+            return $this->error('The query param "oAuthService" is invalid.');
         }
 
         $requestedScopes = explode(
@@ -81,10 +99,14 @@ class AskForAuthorizationResponse extends AbstractAction
         );
 
         $isAuthorizedResult = $oAuthService->isAuthorized($requestedScopes);
-        if ($isAuthorizedResult) {
-            // disparar um evento aqui
-        } else {
-            // disparar um evento aqui
+        $oAuthConnectEvent  = new OAuthConnectEvent($isAuthorizedResult);
+        $eventResponses    = $this->events->trigger(OAuthConnectEvent::EVENT_OAUTH_RESPONSE, $oAuthConnectEvent, function ($r) {
+            return $r instanceof Response;
+        });
+
+        $eventResult  = $eventResponses->last();
+        if ($eventResult instanceof Response) {
+            return $eventResult;
         }
 
         $routeToRedirect = $this->_getInternalRedirectRoute();
@@ -161,4 +183,24 @@ class AskForAuthorizationResponse extends AbstractAction
         return $str;
     }
 
+    private function error($error)
+    {
+        /** @var Response $response */
+        $response = $this->getResponse();
+
+        $response->setStatusCode(400);
+        $response->setContent(
+            json_encode(
+                [
+                    'status' => '400',
+                    'detail' => $error,
+                ]
+            )
+        );
+
+        $headers = $response->getHeaders();
+        $headers->addHeaderLine('Content-type', 'application/json; charset=utf-8');
+
+        return $response;
+    }
 }

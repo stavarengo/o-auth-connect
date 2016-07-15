@@ -11,12 +11,18 @@ return [
         ],
         'factories' => [
             \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorization::class => \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationFactory::class,
+            \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationResponse::class => \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationResponseFactory::class,
             \Sta\OAuthConnect\OAuthService\Facebook::class => \Sta\OAuthConnect\OAuthService\FacebookFactory::class,
         ],
     ],
     'controllers' => [
         'invokables' => [
             \Sta\OAuthConnect\Controller\OAuthConnectController::class => \Sta\OAuthConnect\Controller\OAuthConnectController::class,
+        ],
+    ],
+    'view_manager' => [
+        'template_path_stack' => [
+            __DIR__ . '/../view',
         ],
     ],
     'router' => [
