@@ -17,7 +17,7 @@ return [
             \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorization::class => \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationFactory::class,
             \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationResponse::class => \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationResponseFactory::class,
             \Sta\OAuthConnect\OAuthService\Service\Facebook::class => \Sta\OAuthConnect\OAuthService\Service\FacebookFactory::class,
-            \App\Google::class => \App\GoogleFactory::class,
+            \Sta\OAuthConnect\OAuthService\Service\Google::class => \Sta\OAuthConnect\OAuthService\Service\GoogleFactory::class,
         ],
     ],
     'controllers' => [
