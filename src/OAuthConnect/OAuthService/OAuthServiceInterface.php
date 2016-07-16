@@ -60,7 +60,7 @@ interface OAuthServiceInterface
     /**
      * @param $scopes
      *
-     * @return IsAuthorizedResult
+     * @return AuthorizationResult
      */
     public function isAuthorized($scopes);
 }

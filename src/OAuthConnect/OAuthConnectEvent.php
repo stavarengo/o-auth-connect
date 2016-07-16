@@ -6,7 +6,8 @@
 
 namespace Sta\OAuthConnect;
 
-use Sta\OAuthConnect\OAuthService\IsAuthorizedResult;
+use Sta\OAuthConnect\OAuthService\AuthorizationResult;
+use Sta\OAuthConnect\OAuthService\OAuthServiceInterface;
 use Zend\EventManager\Event;
 
 class OAuthConnectEvent extends Event
@@ -14,38 +15,65 @@ class OAuthConnectEvent extends Event
     const EVENT_OAUTH_RESPONSE = 'oauth_response';
 
     /**
-     * @var IsAuthorizedResult
+     * @var AuthorizationResult
      */
-    protected $authorizedResult;
+    protected $authorizationResult;
+    /**
+     * @var OAuthServiceInterface
+     */
+    protected $oAuthService;
 
     /**
      * OAuthConnectEvent constructor.
      *
-     * @param \Zend\Mvc\MvcEvent $mvcEvent
-     * @param \Sta\OAuthConnect\OAuthService\IsAuthorizedResult $authorizedResult
+     * @param \Sta\OAuthConnect\OAuthService\AuthorizationResult $authorizationResult
+     * @param \Sta\OAuthConnect\OAuthService\OAuthServiceInterface $oAuthService
      */
-    public function __construct(\Sta\OAuthConnect\OAuthService\IsAuthorizedResult $authorizedResult)
-    {
-        $this->authorizedResult = $authorizedResult;
+    public function __construct(
+        \Sta\OAuthConnect\OAuthService\AuthorizationResult $authorizationResult,
+        \Sta\OAuthConnect\OAuthService\OAuthServiceInterface $oAuthService
+    ) {
+        $this->authorizationResult = $authorizationResult;
+        $this->oAuthService        = $oAuthService;
         parent::__construct();
     }
 
     /**
-     * @return \Sta\OAuthConnect\OAuthService\IsAuthorizedResult
+     * @return \Sta\OAuthConnect\OAuthService\OAuthServiceInterface
      */
-    public function getAuthorizedResult()
+    public function getOAuthService()
     {
-        return $this->authorizedResult;
+        return $this->oAuthService;
     }
 
     /**
-     * @param \Sta\OAuthConnect\OAuthService\IsAuthorizedResult $authorizedResult
+     * @param \Sta\OAuthConnect\OAuthService\OAuthServiceInterface $oAuthService
      *
      * @return $this
      */
-    public function setAuthorizedResult($authorizedResult)
+    public function setOAuthService($oAuthService)
     {
-        $this->authorizedResult = $authorizedResult;
+        $this->oAuthService = $oAuthService;
+
+        return $this;
+    }
+
+    /**
+     * @return \Sta\OAuthConnect\OAuthService\AuthorizationResult
+     */
+    public function getAuthorizationResult()
+    {
+        return $this->authorizationResult;
+    }
+
+    /**
+     * @param \Sta\OAuthConnect\OAuthService\AuthorizationResult $authorizationResult
+     *
+     * @return $this
+     */
+    public function setAuthorizationResult($authorizationResult)
+    {
+        $this->authorizationResult = $authorizationResult;
 
         return $this;
     }

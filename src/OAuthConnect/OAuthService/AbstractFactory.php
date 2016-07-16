@@ -42,9 +42,13 @@ class AbstractFactory implements AbstractFactoryInterface
      */
     public function canCreate(ContainerInterface $container, $requestedName)
     {
-        $serviceNamespace = __NAMESPACE__ . '\\';
-
-        return strpos($requestedName, $serviceNamespace) === 0;
+        if ($this->isCustomService($container, $requestedName)) {
+            return true;
+        }
+        
+        //$serviceNamespace                      = __NAMESPACE__ . '\\';
+        //$isOneOfOurOutOfTheBoxSupportedService = strpos($requestedName, $serviceNamespace) === 0;
+        return  $this->doWeRecognizeThiRequestedName($requestedName);
     }
 
     /**
@@ -76,35 +80,97 @@ class AbstractFactory implements AbstractFactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $serviceClassName = $requestedName;
-
-        if (!class_exists($serviceClassName)) {
-            throw new \Sta\OAuthConnect\Exception\InvalidThirdPartyName(
-                'Invalid "thirdPartyName". We do not support the service "' . $serviceClassName . '".'
-            );
+        $doWeRecognizeThiRequestedName = $this->doWeRecognizeThiRequestedName($requestedName);
+        // Correct the namespace
+        $shortName = trim(str_replace(__NAMESPACE__, '', $requestedName), '\\');
+        if ($this->isCustomService($container, $requestedName)) {
+            $serviceClassName = $this->getCustomServices($container)[$shortName];
+        } else {
+            $serviceClassName = __NAMESPACE__ . '\\Service\\' . ucfirst($shortName);
         }
 
         if ($container->has($serviceClassName)) {
             $service = $container->get($serviceClassName);
         } else {
+            if (!class_exists($serviceClassName)) {
+                $serviceName = $serviceClassName;
+                $errorMsg    = 'The OAuthService class "' . $serviceName . '" was not found.';
+                if ($doWeRecognizeThiRequestedName) {
+                    if (isset($shortName)) {
+                        $serviceName = $shortName;
+                        $errorMsg    = 'Invalid OAuthService. We do not support this service yet: "' . $serviceName . '".' .
+                            'See this link to learn how to implement a custom service: ' .
+                            'https://github.com/stavarengo/o-auth-connect#adding-custom-services';
+                    }
+                }
+                throw new \Sta\OAuthConnect\Exception\InvalidThirdPartyName($errorMsg);
+            }
+
             $service = new $serviceClassName();
         }
+
 
         if (!($service instanceof OAuthServiceInterface)) {
             throw new \Sta\OAuthConnect\Exception\InvalidThirdPartyName(
                 'The service "' . $serviceClassName .
-                '" does not implement the interface "' . OAuthServiceInterface::class . '".'
+                '" must implement the interface "' . OAuthServiceInterface::class . '".'
             );
         }
 
         $checkDependencies = $service->checkDependencies();
         if ($checkDependencies !== true) {
             throw new MissingOAuthServiceDependencies(
-                'Please, make sure you have all of this requeriments ok before you try to use the ' .
-                $serviceClassName . ' OAuth Service: ' . implode(', ', $checkDependencies)
+                'Please, make sure you have all of this requirements ok before you try to use the ' .
+                $serviceClassName . ' OAuth Service. The requirements are: ' . implode(', ', $checkDependencies)
             );
         }
 
         return $service;
+    }
+
+    /**
+     * @param $requestedName
+     *
+     * @return int
+     */
+    public function doWeRecognizeThiRequestedName($requestedName)
+    {
+        $regex                                 = preg_quote(__NAMESPACE__ . '\\', '/') . '[A-Za-z_0-9]+$';
+        $isOneOfOurOutOfTheBoxSupportedService = preg_match('/' . $regex . '/', $requestedName);
+
+        return $isOneOfOurOutOfTheBoxSupportedService;
+    }
+
+    /**
+     * @param \Interop\Container\ContainerInterface $container
+     *
+     * @return mixed
+     */
+    public function getCustomServices(ContainerInterface $container)
+    {
+        $config             = $container->get('Config');
+        $oAuthConnectConfig = $config['sta']['o-auth-connect'];
+        $customServices     = $oAuthConnectConfig['custom-services'];
+
+        return $customServices;
+    }
+
+    /**
+     * @param \Interop\Container\ContainerInterface $container
+     * @param $requestedName
+     *
+     * @return bool
+     */
+    public function isCustomService(ContainerInterface $container, $requestedName)
+    {
+        if (!$this->doWeRecognizeThiRequestedName($requestedName)) {
+            return false;
+        }
+
+        $customServices = $this->getCustomServices($container);
+
+        $customServiceName = trim(str_replace(__NAMESPACE__, '', $requestedName), '\\');
+
+        return isset($customServices[$customServiceName]);
     }
 }

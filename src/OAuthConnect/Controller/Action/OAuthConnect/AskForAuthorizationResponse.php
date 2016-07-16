@@ -12,7 +12,7 @@ use Sta\Commons\InternalRoute;
 use Sta\OAuthConnect\Controller\AbstractActionExController;
 use Sta\OAuthConnect\Controller\Action\AbstractAction;
 use Sta\OAuthConnect\OAuthConnectEvent;
-use Sta\OAuthConnect\OAuthService\Facebook;
+use Sta\OAuthConnect\OAuthService\AuthorizationResult;
 use Sta\OAuthConnect\OAuthService\OAuthServiceInterface;
 use Zend\EventManager\EventManagerInterface;
 use Zend\Http\PhpEnvironment\Response;
@@ -42,6 +42,7 @@ class AskForAuthorizationResponse extends AbstractAction
     const QUERY_PARAM_REQUESTED_SCOPES = 'requestedScopes';
     const OPT_ASYNC_AUTHORIZATION = 'sta-async';
     const SESSION_PARAM_CONTINUE_AFTER_LOGIN = self::class . '::SESSION_PARAM_CONTINUE_AFTER_LOGIN';
+    const SESSION_OAUTH_SERVICE = self::class . '::SESSION_OAUTH_SERVICE';
 
     /**
      * @var EventManagerInterface
@@ -82,29 +83,38 @@ class AskForAuthorizationResponse extends AbstractAction
     public function execute()
     {
         $oAuthService = null;
-        if ($this->params()->fromQuery('oAuhtService') == md5(Facebook::class)) {
+        if (isset($_SESSION[self::SESSION_OAUTH_SERVICE])) {
             /** @var OAuthServiceInterface $oAuthService */
             $oAuthService = $this->getController()->getServiceLocator()->get(
-                'Sta\OAuthConnect\OAuthService\Facebook'
+                'Sta\OAuthConnect\OAuthService\\' . $_SESSION[self::SESSION_OAUTH_SERVICE]
             );
+            unset($_SESSION[self::SESSION_OAUTH_SERVICE]);
         }
 
         if (!$oAuthService) {
             return $this->error('The query param "oAuthService" is invalid.');
         }
 
-        $requestedScopes = explode(
-            ',',
-            base64_decode($this->params()->fromQuery(self::QUERY_PARAM_REQUESTED_SCOPES))
+        $requestedScopes = explode(',', base64_decode($this->params()->fromQuery(self::QUERY_PARAM_REQUESTED_SCOPES)));
+
+        $authorizationResult = $oAuthService->isAuthorized($requestedScopes);
+        if (!($authorizationResult instanceof AuthorizationResult)) {
+            return $this->error(
+                'This OAuth Service implementation method ' . get_class($oAuthService) . '::isAuthorized() must ' .
+                'return a instance of ' . \Sta\OAuthConnect\OAuthService\AuthorizationResult::class . '.'
+            );
+        }
+
+        $oAuthConnectEvent = new OAuthConnectEvent($authorizationResult);
+        $eventResponses    = $this->events->trigger(
+            OAuthConnectEvent::EVENT_OAUTH_RESPONSE,
+            $oAuthConnectEvent,
+            function ($r) {
+                return $r instanceof Response;
+            }
         );
 
-        $isAuthorizedResult = $oAuthService->isAuthorized($requestedScopes);
-        $oAuthConnectEvent  = new OAuthConnectEvent($isAuthorizedResult);
-        $eventResponses    = $this->events->trigger(OAuthConnectEvent::EVENT_OAUTH_RESPONSE, $oAuthConnectEvent, function ($r) {
-            return $r instanceof Response;
-        });
-
-        $eventResult  = $eventResponses->last();
+        $eventResult = $eventResponses->last();
         if ($eventResult instanceof Response) {
             return $eventResult;
         }
@@ -162,21 +172,19 @@ class AskForAuthorizationResponse extends AbstractAction
      *
      * @return string
      */
-    public static function getCallbackUrl(
-        AbstractActionExController $controller, OAuthServiceInterface $oAuhtService, array $scopes = []
-    ) {
+    public static function getCallbackUrl(AbstractActionExController $controller, $oAuhtServiceName, array $scopes = [])
+    {
         if ($scopes) {
             $query[self::QUERY_PARAM_REQUESTED_SCOPES] = base64_encode(implode(',', $scopes));
         }
+
+        $_SESSION[self::SESSION_OAUTH_SERVICE] = $oAuhtServiceName;
 
         $str = $controller->url()->fromRoute(
             'sta/oAuthConnect/response',
             [],
             [
                 'force_canonical' => true,
-                'query' => [
-                    'oAuhtService' => md5(get_class($oAuhtService)),
-                ],
             ]
         );
 

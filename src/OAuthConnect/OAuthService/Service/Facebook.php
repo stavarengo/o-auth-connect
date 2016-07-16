@@ -1,5 +1,9 @@
 <?php
-namespace Sta\OAuthConnect\OAuthService;
+namespace Sta\OAuthConnect\OAuthService\Service;
+
+use Sta\OAuthConnect\OAuthService\AuthorizationResult;
+use Sta\OAuthConnect\OAuthService\OAuthServiceInterface;
+
 /**
  * front-end Project ${PROJECT_URL}
  *
@@ -116,20 +120,13 @@ class Facebook implements OAuthServiceInterface
         $accessToken = $helper->getAccessToken();
 
         if (!$accessToken || $accessToken->isExpired()) {
-            return false;
+            return new AuthorizationResult(null);
         }
 
         $accessTokenMetadata = $fb->getOAuth2Client()->debugToken($accessToken);
         $authorizedScopes    = $accessTokenMetadata->getScopes();
         $scopes              = array_unique($scopes);
-        $missedScopes        = array_diff($scopes, $authorizedScopes);
 
-
-        $result = new IsAuthorizedResult();
-        $result->setAuthorizedScopes($authorizedScopes);
-        $result->setMissedScopes($missedScopes);
-        $result->setAuthorized(!$missedScopes);
-
-        return $result;
+        return new AuthorizationResult($accessToken->getValue(), $scopes, $authorizedScopes);
     }
 }

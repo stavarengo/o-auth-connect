@@ -3,6 +3,10 @@
 return [
     'sta' => [
         'o-auth-connect' => [
+            'o-auth-services' => [
+            ],
+            'custom-services' => [
+            ],
         ],
     ],
     'service_manager' => [
@@ -12,7 +16,8 @@ return [
         'factories' => [
             \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorization::class => \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationFactory::class,
             \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationResponse::class => \Sta\OAuthConnect\Controller\Action\OAuthConnect\AskForAuthorizationResponseFactory::class,
-            \Sta\OAuthConnect\OAuthService\Facebook::class => \Sta\OAuthConnect\OAuthService\FacebookFactory::class,
+            \Sta\OAuthConnect\OAuthService\Service\Facebook::class => \Sta\OAuthConnect\OAuthService\Service\FacebookFactory::class,
+            \App\Google::class => \App\GoogleFactory::class,
         ],
     ],
     'controllers' => [
@@ -45,9 +50,9 @@ return [
                         'may_terminate' => false,
                         'child_routes' => [
                             'ask' => [
-                                'type' => 'Literal',
+                                'type' => 'Segment',
                                 'options' => [
-                                    'route' => '/ask',
+                                    'route' => '/ask/:oAuthService',
                                     'defaults' => [
                                         'action' => 'ask-for-authorization',
                                     ],

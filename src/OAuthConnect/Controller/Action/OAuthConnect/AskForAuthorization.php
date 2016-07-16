@@ -47,29 +47,39 @@ class AskForAuthorization extends AbstractAction
      */
     public function execute()
     {
-        $oAuthServiceName             = $this->params()->fromQuery('oAuthService');
+        $oAuthServiceName             = $this->params('oAuthService');
         $redirectAfterResponse        = $this->params()->fromQuery('redirectAfterResponse');
-        $scopes                       = $this->params()->fromQuery('scopes');
-        $scopes                       = ($scopes ? explode(',', $scopes) : []);
+        $scopes                       = $this->params()->fromQuery('scopes', []);
         $routeToRedirectAfterResponse = null;
+
+        if (is_string($scopes)) {
+            $scopes = explode(',', $scopes);
+        }
 
         if (!$oAuthServiceName) {
             return $this->error('The query param "oAuthService" is required.');
         }
 
         if ($redirectAfterResponse) {
-            if ($decrypt_ = CryptQueryParam::decrypt_($redirectAfterResponse)) {
-                $routeToRedirectAfterResponse = new InternalRoute($decrypt_);
+            if (is_string($redirectAfterResponse)) {
+                $redirectAfterResponse = CryptQueryParam::decrypt_($redirectAfterResponse);
+            }
+            if ($redirectAfterResponse) {
+                $routeToRedirectAfterResponse = new InternalRoute($redirectAfterResponse);
             }
         }
 
         AskForAuthorizationResponse::storeWhereToRedirectAfterResponse($routeToRedirectAfterResponse);
 
-        /** @var OAuthServiceInterface $oauthService */
-        $oauthService         = $this->container->get('Sta\OAuthConnect\OAuthService\\' . ucfirst($oAuthServiceName));
-        $callbackUrl = AskForAuthorizationResponse::getCallbackUrl($this->getController(), $oauthService, $scopes);
+        /** @var OAuthServiceInterface $oAuthService */
+        $oAuthService         = $this->container->get('Sta\OAuthConnect\OAuthService\\' . $oAuthServiceName);
+        $callbackUrl = AskForAuthorizationResponse::getCallbackUrl($this->getController(), $oAuthServiceName, $scopes);
 
-        $authorizeRedirectUri = $oauthService->getUrlToAskAuthorization($callbackUrl, $scopes);
+        $authorizeRedirectUri = $oAuthService->getUrlToAskAuthorization($callbackUrl, $scopes);
+        if (!$authorizeRedirectUri) {
+            return $this->error('OAuth Service implementation class method ' . get_class($oAuthService) .
+                '::getUrlToAskAuthorization() must return a valid URL.');
+        }
 
         return $this->getController()->redirect()->toUrl($authorizeRedirectUri);
     }
