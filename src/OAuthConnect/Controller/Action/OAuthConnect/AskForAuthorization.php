@@ -53,7 +53,11 @@ class AskForAuthorization extends AbstractAction
         $routeToRedirectAfterResponse = null;
 
         if (is_string($scopes)) {
-            $scopes = explode(',', $scopes);
+            if (trim($scopes)) {
+                $scopes = explode(',', $scopes);
+            } else {
+                $scopes = [];
+            }
         }
 
         if (!$oAuthServiceName) {
@@ -69,16 +73,28 @@ class AskForAuthorization extends AbstractAction
             }
         }
 
-        AskForAuthorizationResponse::storeWhereToRedirectAfterResponse($routeToRedirectAfterResponse);
+        AskForAuthorizationResponse::storeDateToUseAfterResponse(
+            $routeToRedirectAfterResponse,
+            $oAuthServiceName,
+            $scopes
+        );
 
         /** @var OAuthServiceInterface $oAuthService */
-        $oAuthService         = $this->container->get('Sta\OAuthConnect\OAuthService\\' . $oAuthServiceName);
-        $callbackUrl = AskForAuthorizationResponse::getCallbackUrl($this->getController(), $oAuthServiceName, $scopes);
+        $oAuthService = $this->container->get('Sta\OAuthConnect\OAuthService\\' . $oAuthServiceName);
+        $callbackUrl  = $this->getController()->url()->fromRoute(
+            'sta/oAuthConnect/response',
+            [],
+            [
+                'force_canonical' => true,
+            ]
+        );
 
         $authorizeRedirectUri = $oAuthService->getUrlToAskAuthorization($callbackUrl, $scopes);
         if (!$authorizeRedirectUri) {
-            return $this->error('OAuth Service implementation class method ' . get_class($oAuthService) .
-                '::getUrlToAskAuthorization() must return a valid URL.');
+            return $this->error(
+                'OAuth Service implementation class method ' . get_class($oAuthService) .
+                '::getUrlToAskAuthorization() must return a valid URL.'
+            );
         }
 
         return $this->getController()->redirect()->toUrl($authorizeRedirectUri);

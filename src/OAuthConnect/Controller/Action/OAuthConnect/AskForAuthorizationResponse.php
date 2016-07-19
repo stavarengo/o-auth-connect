@@ -7,6 +7,7 @@
 
 namespace Sta\OAuthConnect\Controller\Action\OAuthConnect;
 
+use App\Auth\OAuthConnect\ApiProblem;
 use Sta\Commons\CryptQueryParam;
 use Sta\Commons\InternalRoute;
 use Sta\OAuthConnect\Controller\AbstractActionExController;
@@ -39,15 +40,17 @@ use Zend\View\Model\ViewModel;
  */
 class AskForAuthorizationResponse extends AbstractAction
 {
-    const QUERY_PARAM_REQUESTED_SCOPES = 'requestedScopes';
     const OPT_ASYNC_AUTHORIZATION = 'sta-async';
-    const SESSION_PARAM_CONTINUE_AFTER_LOGIN = self::class . '::SESSION_PARAM_CONTINUE_AFTER_LOGIN';
-    const SESSION_OAUTH_SERVICE = self::class . '::SESSION_OAUTH_SERVICE';
+    const SESSION_DATA_TO_USE_AFTER_RESPONSE = self::class . '::SESSION_DATA_TO_USE_AFTER_RESPONSE';
 
     /**
      * @var EventManagerInterface
      */
     protected $events;
+    /**
+     * @var array
+     */
+    protected $dataToUseAfterResponse;
 
     /**
      * AskForAuthorizationResponse constructor.
@@ -60,42 +63,23 @@ class AskForAuthorizationResponse extends AbstractAction
     }
 
     /**
-     * @param $continueAfterResponse
-     */
-    public static function storeWhereToRedirectAfterResponse($continueAfterResponse)
-    {
-        if ($continueAfterResponse instanceof \Sta\Commons\InternalRoute) {
-            $cryptQueryParam = new \Sta\Commons\CryptQueryParam();
-            $continue        = $cryptQueryParam->crypt($continueAfterResponse->toArray());
-        } else {
-            $continue = $continueAfterResponse;
-        }
-        if ($continue) {
-            $_SESSION[self::SESSION_PARAM_CONTINUE_AFTER_LOGIN] = $continue;
-        }
-    }
-
-    /**
      * Executa a ação.
      *
      * @return mixin
      */
     public function execute()
     {
-        $oAuthService = null;
-        if (isset($_SESSION[self::SESSION_OAUTH_SERVICE])) {
-            /** @var OAuthServiceInterface $oAuthService */
-            $oAuthService = $this->getController()->getServiceLocator()->get(
-                'Sta\OAuthConnect\OAuthService\\' . $_SESSION[self::SESSION_OAUTH_SERVICE]
-            );
-            unset($_SESSION[self::SESSION_OAUTH_SERVICE]);
+        $dataToUseAfterResponse = $this->_getDataToUseAfterResponse();
+        if ($dataToUseAfterResponse === null) {
+            return $this->error('Invalid session state. First you need to access the route "sta/oAuthConnect/ask".');
         }
 
-        if (!$oAuthService) {
-            return $this->error('The query param "oAuthService" is invalid.');
-        }
+        /** @var OAuthServiceInterface $oAuthService */
+        $oAuthService = $this->getController()->getServiceLocator()->get(
+            'Sta\OAuthConnect\OAuthService\\' . $dataToUseAfterResponse['oAuthServiceName']
+        );
 
-        $requestedScopes = explode(',', base64_decode($this->params()->fromQuery(self::QUERY_PARAM_REQUESTED_SCOPES)));
+        $requestedScopes = $dataToUseAfterResponse['scopes'];
 
         $authorizationResult = $oAuthService->isAuthorized($requestedScopes);
         if (!($authorizationResult instanceof AuthorizationResult)) {
@@ -105,7 +89,7 @@ class AskForAuthorizationResponse extends AbstractAction
             );
         }
 
-        $oAuthConnectEvent = new OAuthConnectEvent($authorizationResult);
+        $oAuthConnectEvent = new OAuthConnectEvent($authorizationResult, $oAuthService);
         $eventResponses    = $this->events->trigger(
             OAuthConnectEvent::EVENT_OAUTH_RESPONSE,
             $oAuthConnectEvent,
@@ -119,7 +103,7 @@ class AskForAuthorizationResponse extends AbstractAction
             return $eventResult;
         }
 
-        $routeToRedirect = $this->_getInternalRedirectRoute();
+        $routeToRedirect = $dataToUseAfterResponse['continue'];
         if ($routeToRedirect) {
             return $this->getController()->redirect()->toRoute(
                 $routeToRedirect->getRoute(),
@@ -131,64 +115,45 @@ class AskForAuthorizationResponse extends AbstractAction
             $viewModel = new ViewModel();
             $viewModel->setTerminal(true);
 
+            if ($eventResult instanceof ApiProblem
+                || (class_exists('\ZF\ApiProblem\ApiProblem') && $eventResult instanceof \ZF\ApiProblem\ApiProblem)
+            ) {
+                $viewModel->error = $eventResult->toArray();
+            }
+
             return $viewModel;
         }
     }
 
     /**
-     * Retorna a rota de redirecionamento que está criptografada na URL da requisição.
-     *
-     * @return InternalRoute
-     *      Retorna null se é uma authoizacao asincrona
+     * @param $continueAfterResponse
      */
-    private function _getInternalRedirectRoute()
+    public static function storeDateToUseAfterResponse($continueAfterResponse, $oAuthServiceName, array $scopes)
     {
-        $continueRoute = null;
-
-        if (isset($_SESSION[self::SESSION_PARAM_CONTINUE_AFTER_LOGIN])) {
-            $continueValue = $_SESSION[self::SESSION_PARAM_CONTINUE_AFTER_LOGIN];
-            unset($_SESSION[self::SESSION_PARAM_CONTINUE_AFTER_LOGIN]);
-            if ($continueValue == self::OPT_ASYNC_AUTHORIZATION) {
-                $continueRoute = null;
-            } else {
-                $continueRoute = new InternalRoute(CryptQueryParam::decrypt_($continueValue));
-            }
+        if ($continueAfterResponse == self::OPT_ASYNC_AUTHORIZATION) {
+            $continueAfterResponse = null;
         }
 
-        return $continueRoute;
+        $_SESSION[self::SESSION_DATA_TO_USE_AFTER_RESPONSE] = [
+            'continue' => $continueAfterResponse,
+            'oAuthServiceName' => $oAuthServiceName,
+            'scopes' => $scopes,
+        ];
     }
 
-    /**
-     * Retorna a URL para onde a Rede Social vai redirecionar a resposta do usuário.
-     * Será uma URL que aponta para está mesma action. Por sua vês está action vai tratar a resposta e redirecionar o
-     * navegador para a rota $internalRoute
-     *
-     * @param ServiceLocatorInterface $sl
-     *
-     * @param \Sta\Commons\InternalRoute|string $continueAfterResponse
-     *      Rota para onde iremos redirecionar o usuário apos receber a resposta da rede social.
-     *      Use {@link \Web\Controller\Action\Facebook\AskForAuthorizationResponse::OPT_ASYNC_AUTHORIZATION } quando
-     *      for um authorization asyncrona
-     *
-     * @return string
-     */
-    public static function getCallbackUrl(AbstractActionExController $controller, $oAuhtServiceName, array $scopes = [])
+    private function _getDataToUseAfterResponse()
     {
-        if ($scopes) {
-            $query[self::QUERY_PARAM_REQUESTED_SCOPES] = base64_encode(implode(',', $scopes));
+        if (!$this->dataToUseAfterResponse) {
+            $data = null;
+            if (isset($_SESSION[self::SESSION_DATA_TO_USE_AFTER_RESPONSE])) {
+                $data = $_SESSION[self::SESSION_DATA_TO_USE_AFTER_RESPONSE];
+                unset($_SESSION[self::SESSION_DATA_TO_USE_AFTER_RESPONSE]);
+            }
+
+            $this->dataToUseAfterResponse = $data;
         }
 
-        $_SESSION[self::SESSION_OAUTH_SERVICE] = $oAuhtServiceName;
-
-        $str = $controller->url()->fromRoute(
-            'sta/oAuthConnect/response',
-            [],
-            [
-                'force_canonical' => true,
-            ]
-        );
-
-        return $str;
+        return $this->dataToUseAfterResponse;
     }
 
     private function error($error)

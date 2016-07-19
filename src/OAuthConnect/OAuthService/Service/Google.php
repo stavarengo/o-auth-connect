@@ -108,4 +108,12 @@ class Google implements OAuthServiceInterface
 
         return $authorizedResult;
     }
+
+    /**
+     * @return \Google_Client
+     */
+    public function getServiceClient()
+    {
+        return $this->client;
+    }
 }

@@ -131,7 +131,7 @@ $langValue = str_replace('_', '-', \Locale::getDefault());
                 if (typeof(window.opener._staOAuthConnectCloseMe) == 'function') {
                     // If there is an opener with an function that can close this window it's safer to ask the that opener
                     // to close this window to avoid secure issues.
-                    window.opener._staOAuthConnectCloseMe(window);
+                    window.opener._staOAuthConnectCloseMe(window, <?php echo ($this->error ? json_encode($this->error) : 'null') ?>);
                 } else {
                     // The opener does not has a custom function to close this window, but we can still try to close
                     // it by our self. This probably will not work in all browsers.

@@ -10,6 +10,11 @@ namespace Sta\OAuthConnect\OAuthService;
 interface OAuthServiceInterface
 {
     /**
+     * @return mixed
+     */
+    public function getServiceClient();
+    
+    /**
      * Verifica todas as dependencias para este serviço funcionar estão instaladas.
      *
      * @return true|string[]

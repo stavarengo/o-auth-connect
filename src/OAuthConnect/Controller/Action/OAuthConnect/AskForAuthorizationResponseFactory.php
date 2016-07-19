@@ -9,6 +9,7 @@ namespace Sta\OAuthConnect\Controller\Action\OAuthConnect;
 
 use Interop\Container\ContainerInterface;
 use Interop\Container\Exception\ContainerException;
+use Zend\Mvc\Application;
 use Zend\ServiceManager\Exception\ServiceNotCreatedException;
 use Zend\ServiceManager\Exception\ServiceNotFoundException;
 use Zend\ServiceManager\FactoryInterface;
@@ -28,7 +29,9 @@ class AskForAuthorizationResponseFactory implements FactoryInterface
      */
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
-        return new AskForAuthorizationResponse($serviceLocator->get('eventManager'));
+        /** @var Application $app */
+        $app = $serviceLocator->get('application');
+        return new AskForAuthorizationResponse($app->getEventManager());
     }
 
     /**
