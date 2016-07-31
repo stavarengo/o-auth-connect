@@ -37,11 +37,6 @@ class Google implements OAuthServiceInterface
         $dependencies = [];
         if (!class_exists('\Google_Client')) {
             $dependencies[] = 'Google API Client PHP Library: https://developers.google.com/api-client-library/php/start/get_started';
-        } else {
-            $minVersion = '5.2.1';
-            if (!version_compare($minVersion, \Facebook\Facebook::VERSION, '>=')) {
-                $dependencies[] = 'Facebook SDK must be version 5.2.0 or great.';
-            }
         }
 
         return ($dependencies ? $dependencies : true);
@@ -99,11 +94,26 @@ class Google implements OAuthServiceInterface
         $authorizedResult = new AuthorizationResult();
 
         if (isset($_GET['code'])) {
-            $accessToken = $this->client->authenticate($_GET['code']);
+            $rawAccessToken = $this->client->authenticate($_GET['code']);
+            if(is_string($rawAccessToken)) {
+                $accessToken     = json_decode($rawAccessToken)->access_token;
+            } else if (is_array($rawAccessToken)) {
+                $accessToken = $rawAccessToken['access_token'];
+            } else {
+                $accessToken = $rawAccessToken->access_token;
+            }
 
-            $authorizedResult->setAccessToken($accessToken);
+            $oAuth            = new \Google_Service_Oauth2($this->client);
+            $tokenInfo        = $oAuth->tokeninfo(
+                [
+                    'access_token' => $accessToken
+                ]
+            );
+            $authorizedScopes = explode(' ', $tokenInfo->getScope());
+
+            $authorizedResult->setAccessToken($rawAccessToken);
             $authorizedResult->setRequiredScopes($scopes);
-            $authorizedResult->setAuthorizedScopes($scopes);
+            $authorizedResult->setAuthorizedScopes($authorizedScopes);
         }
 
         return $authorizedResult;
