@@ -85,16 +85,16 @@
         },
         {
             "name": "stavarengo/sta-commons",
-            "version": "v0.0.2",
+            "version": "v0.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/stavarengo/sta-commons.git",
-                "reference": "316319a05f63665c96f15a64dce374f88861e831"
+                "reference": "62de65c0255f89401c3f53283fe3686682d4f077"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/stavarengo/sta-commons/zipball/316319a05f63665c96f15a64dce374f88861e831",
-                "reference": "316319a05f63665c96f15a64dce374f88861e831",
+                "url": "https://api.github.com/repos/stavarengo/sta-commons/zipball/62de65c0255f89401c3f53283fe3686682d4f077",
+                "reference": "62de65c0255f89401c3f53283fe3686682d4f077",
                 "shasum": ""
             },
             "require": {
@@ -122,7 +122,7 @@
                     "homepage": "http://facebook.com/rafael.stavarengo"
                 }
             ],
-            "time": "2016-07-31 20:08:58"
+            "time": "2017-02-08 14:41:44"
         },
         {
             "name": "zendframework/zend-crypt",
