@@ -5,6 +5,7 @@
         "This file is @generated automatically"
     ],
     "hash": "03c881a29c633a39ded43748a8b72823",
+    "content-hash": "b99c131c14cfe21b4fdbea380031f0ec",
     "packages": [
         {
             "name": "container-interop/container-interop",
