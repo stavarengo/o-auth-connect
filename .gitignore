@@ -11,4 +11,5 @@ public/vendor/
 !public/vendor/README.md
 .vagrant
 composer.phar
+composer.lock
 node_modules
