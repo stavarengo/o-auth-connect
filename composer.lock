@@ -85,22 +85,22 @@
         },
         {
             "name": "stavarengo/sta-commons",
-            "version": "v0.0.3",
+            "version": "v0.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/stavarengo/sta-commons.git",
-                "reference": "62de65c0255f89401c3f53283fe3686682d4f077"
+                "reference": "439cfeff2294b6bd4cbd611896fe9e0c2d02a33d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/stavarengo/sta-commons/zipball/62de65c0255f89401c3f53283fe3686682d4f077",
-                "reference": "62de65c0255f89401c3f53283fe3686682d4f077",
+                "url": "https://api.github.com/repos/stavarengo/sta-commons/zipball/439cfeff2294b6bd4cbd611896fe9e0c2d02a33d",
+                "reference": "439cfeff2294b6bd4cbd611896fe9e0c2d02a33d",
                 "shasum": ""
             },
             "require": {
                 "php": "^5.3.3|~7.0",
-                "zendframework/zend-crypt": "^2.5.0 || ^2.7.5 || ^3.0.3",
-                "zendframework/zend-router": "^2.5.0 || ^2.7.5 || ^3.0.3"
+                "zendframework/zend-crypt": "^2.5.0 || ^2.7.5 || ^3.0",
+                "zendframework/zend-router": "^2.5.0 || ^2.7.5 || ^3.0"
             },
             "type": "library",
             "autoload": {
@@ -122,7 +122,7 @@
                     "homepage": "http://facebook.com/rafael.stavarengo"
                 }
             ],
-            "time": "2017-02-08 14:41:44"
+            "time": "2017-06-15 19:08:29"
         },
         {
             "name": "zendframework/zend-crypt",
