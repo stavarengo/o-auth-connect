@@ -7,7 +7,7 @@
 
 namespace Sta\OAuthConnect\Controller\Action\OAuthConnect;
 
-use App\Auth\OAuthConnect\ApiProblem;
+use Sta\OAuthConnect\ApiProblem;
 use Sta\Commons\CryptQueryParam;
 use Sta\Commons\InternalRoute;
 use Sta\OAuthConnect\Controller\AbstractActionExController;

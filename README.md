@@ -69,7 +69,7 @@ Lest understand a little bit more about what is going on in this `phtml` file.
 > Note: If your don't want to expose yours routes throgth an query param, [read it to learn how](#hidding-routes).
 
 #### <a name="executing-and-testing"></a>Learn by Example: Executing and testing
-If you execute this code now and click in one of the links you will get an error `Zend\ServiceManager\Exception\ServiceNotCreatedException` with some previous exceptions attached to it. Looking down throw the previous exceptions attached you will find the exception `Sta\OAuthConnect\Exception\MissingConfiguration` saying that the configuration `$config['sta']['o-auth-connect']['o-auth-services']['facebook']['appId']` wasn't found.
+If you execute this code now and click in one of the links you will get an error `Zend\ServiceManager\Exception\ServiceNotCreatedException` with some previous exceptions attached to it. Looking down throw the previous exceptions attached you will find the exception `Sta\OAuthConnect\Exception\MissingConfiguration` saying that the configuration `$config[\Sta\OAuthConnect\ConfigProvider::class]['o-auth-services']['facebook']['appId']` wasn't found.
 
 It happens because we need to configure our credentials of all the services we need to use. Each service has diferent ways to declare its credentials, but you does not need to worry about it: OAuthConnect will ways say what is missing and where exactly you should set it. So lets add our credentials to use both Google and Facebook OAuth Services.
 
@@ -77,17 +77,15 @@ It happens because we need to configure our credentials of all the services we n
 
 Add this to your `config/autoload/global.php` config file.
 ```php
-'sta' => [
-    'o-auth-connect' => [
-        'o-auth-services' => [
-            'facebook' => [
-                'appId' => 'YOUR_APP_ID',
-                'appSecret' => 'YOUR_APP_SECRET',
-            ],
-            'google' => [
-                'clientId' => '...',
-                'clientSecret' => '...',
-            ],
+\Sta\OAuthConnect\ConfigProvider::class => [
+    'o-auth-services' => [
+        'facebook' => [
+            'appId' => 'YOUR_APP_ID',
+            'appSecret' => 'YOUR_APP_SECRET',
+        ],
+        'google' => [
+            'clientId' => '...',
+            'clientSecret' => '...',
         ],
     ],
 ],
@@ -109,11 +107,9 @@ If you need to use another OAuth service that is not supported by o-auth-connect
  1. Creating a class that implements the interface [\Sta\OAuthConnect\OAuthService\OAuthServiceInterface](https://github.com/stavarengo/o-auth-connect/blob/master/src/OAuthConnect/OAuthService/OAuthServiceInterface.php).
  2. Add this class to the OAuthConnect using the config file, as follow:   
 ```PHP
-'sta' => [
-    'o-auth-connect' => [
-        'custom-services' => [
-	        'Your\New\Facy\OAuthServiceClass'
-        ],
+\Sta\OAuthConnect\ConfigProvider::class => [
+    'custom-services' => [
+        'Your\New\Facy\OAuthServiceClass'
     ],
 ];
 ```

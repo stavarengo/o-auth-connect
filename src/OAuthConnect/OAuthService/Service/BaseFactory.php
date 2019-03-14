@@ -24,8 +24,12 @@ abstract class BaseFactory implements FactoryInterface
         foreach ($requiredConfigs as $requiredConfig) {
             if (!isset($oAuthServiceConfig[$requiredConfig])) {
                 throw new MissingConfiguration(
-                    "Missing configuration: \"\$config['sta']['o-auth-connect']['o-auth-services']" .
-                    "['$configEntryName']['$requiredConfig']\""
+                    sprintf(
+                        'Missing configuration: "$config["%s"]["o-auth-services"]["%s"]["%s"]"',
+                        \Sta\OAuthConnect\ConfigProvider::class,
+                        $configEntryName,
+                        $requiredConfig
+                    )
                 );
             }
         }
@@ -36,11 +40,15 @@ abstract class BaseFactory implements FactoryInterface
     protected function getOAuthServiceConfig(ServiceLocatorInterface $serviceLocator, $configEntryName)
     {
         $config          = $serviceLocator->get('config');
-        $oAuthServices   = $config['sta']['o-auth-connect']['o-auth-services'];
+        $oAuthServices   = $config[\Sta\OAuthConnect\ConfigProvider::class]['o-auth-services'];
 
         if (!isset($oAuthServices[$configEntryName])) {
             throw new MissingConfiguration(
-                "Missing configuration: \"\$config['sta']['o-auth-connect']['o-auth-services']['$configEntryName']\""
+                sprintf(
+                    'Missing configuration: "$config["%s"]["o-auth-services"]["%s"]"',
+                    \Sta\OAuthConnect\ConfigProvider::class,
+                    $configEntryName
+                )
             );
         }
 

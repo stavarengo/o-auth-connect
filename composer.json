@@ -9,6 +9,13 @@
             "homepage": "http://facebook.com/rafael.stavarengo"
         }
     ],
+    "extra": {
+        "zf": {
+            "component": "Sta\\OAuthConnect",
+            "module": "Sta\\OAuthConnect",
+            "config-provider": "Sta\\OAuthConnect\\ConfigProvider"
+        }
+    },
     "require": {
         "php": "^5.3.3|~7.0",
         "stavarengo/sta-commons": "^0.0",
@@ -19,9 +26,6 @@
     "autoload": {
         "psr-4": {
             "Sta\\OAuthConnect\\": "src/OAuthConnect/"
-        },
-        "classmap": [
-            "./Module.php"
-        ]
+        }
     }
 }

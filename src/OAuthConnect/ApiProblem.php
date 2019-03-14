@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Auth\OAuthConnect;
+namespace Sta\OAuthConnect;
 
 /**
  * Object describing an API-Problem payload.

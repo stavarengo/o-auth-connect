@@ -149,7 +149,7 @@ class AbstractFactory implements AbstractFactoryInterface
     public function getCustomServices(ContainerInterface $container)
     {
         $config             = $container->get('Config');
-        $oAuthConnectConfig = $config['sta']['o-auth-connect'];
+        $oAuthConnectConfig = $config[\Sta\OAuthConnect\ConfigProvider::class];
         $customServices     = $oAuthConnectConfig['custom-services'];
 
         return $customServices;
