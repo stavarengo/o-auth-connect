@@ -1,6 +1,6 @@
 
 # o-auth-connect
-OAuthConnect is the easiest way (second the author) to connect to OAuth2 services using Zend Framework 2 (ZF2).
+OAuthConnect is a ZF2/ZF3 library that adds the "Login With Facebook, Google, etc" behavior to you application.
 
 It's a tiny ZF2 module that you can require using composer. It does not install any tirdy part OAuth library automatically, so you are free to install only the OAuth librarys of the services you want to use and o-auth-connect will detect it.
 
